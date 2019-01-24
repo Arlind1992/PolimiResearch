@@ -7,6 +7,8 @@ Created on Thu Dec 27 14:39:47 2018
 import pandas as pd
 import datetime
 
+
+
 def create_anagrafica(sheet,row_supply):
     to_return={}
     index_row=sheet[row_supply+1]

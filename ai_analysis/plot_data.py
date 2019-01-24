@@ -5,6 +5,9 @@ Created on Thu Dec 27 14:35:44 2018
 @author: RUFIAR1
 """
 import pandas as pd
+import locale
+locale.setlocale(locale.LC_TIME, "en_US.UTF-8") 
+
 def plot_finance_data(finance_data):
     finance_data['All Data']=finance_data['Material'].astype('str')+','+finance_data['Fiscal year/period']
     tras_finance_data=finance_data.drop(['Fiscal year/period','Material'],axis=1).set_index('All Data').T
