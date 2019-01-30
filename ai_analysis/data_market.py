@@ -19,25 +19,25 @@ def create_market_data_complete(file='Market Data/2018.10 RETAIL - Download 20 s
     market_data=market_data.set_index("All Data")
     return market_data
 
-def create_market_data_from_csv(filepath='Market Data/All Market Data Sandoz 2.csv',separator=','):
-    dt=pd.read_csv(filepath,sep=separator,decimal=",")
+def create_market_data_from_csv(filepath='Market Data/All Market Data Sandoz 2.csv',separator=',',multiply=1,decimalsep=','):
+    dt=pd.read_csv(filepath,sep=separator,decimal=decimalsep) 
     col_names=list(dt)
     pattern=re.compile('^Sell-in (.*?)/')
     for colname in col_names:
         if pattern.match(colname):
+            dt[colname]=dt[colname].apply(lambda x: int(str(x).replace('.','')) if multiply==1 else int(str(x).replace('.',''))*multiply).astype(int)
             dt=dt.rename(columns = {colname: re.sub(pattern, '01/', colname)})
     return dt
-    ddd=create_market_data_from_csv()
+
 def create_all_old_market_data(path_data):
     onlyfiles = [f for f in listdir(path_data) if isfile(join(path_data, f))]
-    df=create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[0],separator=';')
+    to_multiply=1000 if 'thousend' in onlyfiles[0] else 1
+    df=create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[0],separator=';',multiply=to_multiply)
     for f_pos in range(1,len(onlyfiles)):
-        df=df.merge(create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[f_pos],separator=';'), how='outer',on=['Manufacturer','Name Type','Product','Pack','Molecule'] )    
+        to_multiply=1000 if 'thousend' in onlyfiles[f_pos] else 1
+        df=df.merge(create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[f_pos],separator=';',multiply=to_multiply), how='outer',on=['Manufacturer','Name Type','Product','Pack','Molecule'] )    
     return df
-path_data='Market Data/All old data'
-onlyfiles = [f for f in listdir(path_data) if isfile(join(path_data, f))]
-df_csv=create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[2],separator=';')
-df_c=pd.read_csv(path_data+'/'+onlyfiles[0],sep=';')
+
 def add_latest_data(latest_data_path,old_data_path):
     latest_data=create_market_data_from_csv(filepath=latest_data_path,separator=';')
     df=create_market_data_from_csv(filepath=old_data_path, separator=';')
@@ -52,11 +52,28 @@ def add_latest_data(latest_data_path,old_data_path):
 
 def get_market_data():
     return create_market_data_from_csv(filepath='AllData/AllDataWithMoleculeSubset.csv',separator=';').drop(columns='Unnamed: 0.1',axis=1)
+
+
+
+def get_probiotici(file='AllData/Probiotici.xlsx',sheet_name='Sheet1'):
+    wb = load_workbook(filename = file)
+    intrested_sheet=wb[sheet_name]
+    market_data_probiotici=cd.create_market_data(intrested_sheet,0,intrested_sheet.max_row).drop(columns='MonthYear',axis=1)
+    market_data_probiotici=market_data_probiotici[(market_data_probiotici['Company']!='Total') &(market_data_probiotici['Product']!='Total')&(market_data_probiotici['Brand']!='Total')]
+    return market_data_probiotici.replace('-',0)
+
+
+def get_probiotici_csv(file='AllData/Probiotici.csv'):
+    market_data_probiotici=pd.read_csv(filepath_or_buffer=file,sep=';',decimal=',').drop(columns='MonthYear',axis=1)
+    market_data_probiotici=market_data_probiotici[(market_data_probiotici['Company']!='Total') &(market_data_probiotici['Product']!='Total')&(market_data_probiotici['Brand']!='Total')]
+    return market_data_probiotici.replace('-',0)
+
 '''
+filepath='Market Data/All old data'+'/'+onlyfiles[1]
 path_data='Market Data/All old data'
 code to save all merge and save all market data archives and also add to them the latest data
 df=create_all_old_market_data('Market Data/All old data')
-df.to_csv(path_or_buf ='Market Data/AllOldData.csv',sep=';',decimal=',')
+df.to_csv(path_or_buf ='Market Data/AllOldData.csv',sep=';')
 toreturn=add_latest_data('Market Data/OnlyNecDataSubsetMolecules.csv','Market Data/AllOldData.csv')
 toreturn.to_csv(path_or_buf ='Market Data/AllDataWithMoleculeSubset.csv',sep=';')
 '''

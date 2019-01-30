@@ -47,3 +47,11 @@ def tras_sales_data(forecast_data):
     forecast_data=forecast_data.set_index("All Data").T
     forecast_data.index=pd.to_datetime(forecast_data.index)
     return forecast_data.sort_index()  
+
+'''done'''
+def tras_market_data_probiotici(market_data):
+    market_data['All Data']=market_data['Company']+','+market_data['Brand']+','+market_data['Product']
+    market_data=market_data.drop(columns=['Company','Brand','Product'])
+    market_data=market_data.set_index("All Data").T
+    market_data.index=pd.to_datetime(market_data.index,format='%b-%Y')
+    return market_data.sort_index()

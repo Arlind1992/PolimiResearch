@@ -17,8 +17,8 @@ def create_df_fromsheet(sheet,row_supply):
 
 '''method to do the set difference between a dataframe and a series'''
 def dataframe_differences(materialsdf,data_to_remove,column_to_filter_by):
-    materials_to_remove_set=data_to_remove.unique()
-    return materialsdf[materialsdf[column_to_filter_by].apply(lambda x: x not in materials_to_remove_set)]
+    materials_to_remove_set=data_to_remove.unique().astype(int)
+    return materialsdf[materialsdf[column_to_filter_by].apply(lambda x: int(x) not in materials_to_remove_set)]
 
 def save_to_csv(df_int):
     df_int[['Material','Brand','Nome','Molecule','Product','Pack']].to_csv(path_or_buf ='integration.csv',sep=';')
