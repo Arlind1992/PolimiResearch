@@ -35,7 +35,7 @@ def create_all_old_market_data(path_data):
     df=create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[0],separator=';',multiply=to_multiply)
     for f_pos in range(1,len(onlyfiles)):
         to_multiply=1000 if 'thousend' in onlyfiles[f_pos] else 1
-        df=df.merge(create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[f_pos],separator=';',multiply=to_multiply), how='outer',on=['Manufacturer','Name Type','Product','Pack','Molecule'] )    
+        df=df.merge(create_market_data_from_csv(filepath=path_data+'/'+onlyfiles[f_pos],separator=';',multiply=to_multiply), how='outer',on=['Manufacturer','Name Type','Product','Pack','Molecule','Anatomical Therapeutic Class 4'] )    
     return df
 
 def add_latest_data(latest_data_path,old_data_path):
@@ -47,11 +47,11 @@ def add_latest_data(latest_data_path,old_data_path):
                 df=df.drop(columns=col_name, axis=1)
             except:
                 pass
-    toreturn=df.merge(latest_data, how='outer',on=['Manufacturer','Name Type','Product','Pack','Molecule'] )    
+    toreturn=df.merge(latest_data, how='outer',on=['Manufacturer','Name Type','Product','Pack','Molecule','Anatomical Therapeutic Class 4'] )    
     return toreturn    
 
 def get_market_data():
-    return create_market_data_from_csv(filepath='AllData/AllDataWithMoleculeSubset.csv',separator=';').drop(columns='Unnamed: 0.1',axis=1)
+    return create_market_data_from_csv(filepath='AllData/AllDataIMS.csv',separator=';').drop(columns='Unnamed: 0.1',axis=1)
 
 
 
@@ -74,7 +74,7 @@ path_data='Market Data/All old data'
 code to save all merge and save all market data archives and also add to them the latest data
 df=create_all_old_market_data('Market Data/All old data')
 df.to_csv(path_or_buf ='Market Data/AllOldData.csv',sep=';')
-toreturn=add_latest_data('Market Data/OnlyNecDataSubsetMolecules.csv','Market Data/AllOldData.csv')
-toreturn.to_csv(path_or_buf ='Market Data/AllDataWithMoleculeSubset.csv',sep=';')
+toreturn=add_latest_data('Market Data/laterstdataallmolecules.csv','Market Data/AllOldData.csv')
+toreturn.to_csv(path_or_buf ='Market Data/AllDataIMS.csv',sep=';')
 '''
 

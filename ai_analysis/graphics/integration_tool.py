@@ -5,7 +5,7 @@ Created on Mon Jan 28 10:58:13 2019
 
 @author: arlind
 """
-import ai_analysis.join_data_differnt_sources as ds
+import ai_analysis.join_data_different_sources as ds
 import sys
  
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget, QPushButton,QInputDialog,QListWidget
@@ -28,12 +28,6 @@ class App(QMainWindow):
         self.height = 500
         self.material=''
         self.initUI()
-    def showDialog(self):    
-       
-        text, ok = QInputDialog.getText(self, 'Input Dialog', 
-            'Enter material:')    
-        if ok:
-             ds.plot_material(text.strip()) 
     
     def plot_diagram(self,item):       
         ds.plot_material(item.text().split('-')[0].strip()) 
@@ -42,7 +36,9 @@ class App(QMainWindow):
         self.setWindowTitle(self.title)
         list_w=QListWidget(self)
         to_add_items=ds.integration['Material'].apply(lambda x:str(x)+'-' )+ds.integration['Product'].apply(lambda x:str(x)+'-' ) +ds.integration['Pack']
+        to_add_items_prob=ds.integration_probiotici['Material'].apply(lambda x:str(x)+'-' )+ds.integration_probiotici['QlikProduct']
         list_w.addItems(list(to_add_items))
+        list_w.addItems(list(to_add_items_prob))
         list_w.itemClicked.connect(self.plot_diagram)
         list_w.resize(400,600)
         '''

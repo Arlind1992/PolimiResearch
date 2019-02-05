@@ -16,8 +16,8 @@ def plot_finance_data(finance_data):
     tras_finance_data.plot.line(title='Finance data')
 '''done'''
 def plot_market_data(market_data):
-    market_data['All Data']=market_data['Molecule']+','+market_data['Manufacturer']+','+market_data['Product']+','+market_data['Pack']+','+market_data['BRAND-INN']+','+market_data["GX-OX"]
-    market_data=market_data.drop(columns=['Molecule','Molecule ADJ','Manufacturer','Product','Pack','BRAND-INN','GX-OX'])
+    market_data['All Data']=market_data['Molecule']+','+market_data['Manufacturer']+','+market_data['Product']+','+market_data['Pack']
+    market_data=market_data.drop(columns=['Molecule','Manufacturer','Product','Pack'])
     market_data=market_data.set_index("All Data").T
     market_data.index=pd.to_datetime(market_data.index,format='%d/%m/%Y')
     market_data=market_data.sort_index()

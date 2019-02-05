@@ -13,18 +13,30 @@ import ai_analysis.sales_data as sd
 import ai_analysis.transform_data as td
 
 def add_history_sales_different_sku(sales_data,anagrafica):    
+    '''
     anagrafica_dub=anagrafica[anagrafica.duplicated(subset=['GMD FDF ID','Brand'])][['GMD FDF ID','Brand']].drop_duplicates()
     anagrafica_to_modify=anagrafica[['Material','GMD FDF ID','Brand','ECC - Local Product Status']].merge(anagrafica_dub,on=['GMD FDF ID','Brand'],how='inner')
-    unique_gmd=anagrafica_to_modify[anagrafica_to_modify['ECC - Local Product Status']=='40'].groupby(['GMD FDF ID','Brand','ECC - Local Product Status'],as_index=False)['Material'].min()
+    unique_gmd=anagrafica_to_modify[(anagrafica_to_modify['ECC - Local Product Status']=='40')|(anagrafica_to_modify['ECC - Local Product Status']=='35')].groupby(['GMD FDF ID','Brand','ECC - Local Product Status'],as_index=False)['Material'].min()
+    unique_gmd=unique_gmd.merge(unique_gmd.groupby(['GMD FDF ID','Brand'],as_index=False)['ECC - Local Product Status'].max())
+    sales_data['Material']=sales_data['Material'].replace(to_replace=create_dict_to_replace(anagrafica_to_modify,unique_gmd))
+    return sales_data.groupby(['Material'],as_index=False).sum()'''
+    anagrafica_dub=anagrafica[anagrafica.duplicated(subset=['GMD AS ID', 'GMD Tot.pack size','Strength - Text','Brand'])][['GMD AS ID', 'GMD Tot.pack size','Strength - Text','Brand']].drop_duplicates()
+    anagrafica_to_modify=anagrafica[['Material','ECC - Local Product Status','GMD AS ID', 'GMD Tot.pack size','Strength - Text','Brand']].merge(anagrafica_dub,on=['GMD AS ID', 'GMD Tot.pack size','Strength - Text','Brand'],how='inner')
+    unique_gmd=anagrafica_to_modify[(anagrafica_to_modify['ECC - Local Product Status']=='40')|(anagrafica_to_modify['ECC - Local Product Status']=='35')].groupby(['GMD AS ID', 'GMD Tot.pack size','Strength - Text','Brand','ECC - Local Product Status'],as_index=False)['Material'].min()
+    unique_gmd=unique_gmd.merge(unique_gmd.groupby(['GMD AS ID', 'GMD Tot.pack size','Strength - Text','Brand'],as_index=False)['ECC - Local Product Status'].max())
     sales_data['Material']=sales_data['Material'].replace(to_replace=create_dict_to_replace(anagrafica_to_modify,unique_gmd))
     return sales_data.groupby(['Material'],as_index=False).sum()
 def create_dict_to_replace(anagrafica_to_modify,unique_gmd):
     dict_to_return={}
     for mat in list(anagrafica_to_modify['Material']):
-        dict_to_return[mat]=unique_gmd[(unique_gmd['GMD FDF ID']==anagrafica_to_modify[anagrafica_to_modify['Material']==mat]['GMD FDF ID'].iloc[0])&(unique_gmd['Brand']==anagrafica_to_modify[anagrafica_to_modify['Material']==mat]['Brand'].iloc[0])]['Material'].iloc[0]
+        try:
+            dict_to_return[mat]=unique_gmd[(unique_gmd['GMD FDF ID']==anagrafica_to_modify[anagrafica_to_modify['Material']==mat]['GMD FDF ID'].iloc[0])&(unique_gmd['Brand']==anagrafica_to_modify[anagrafica_to_modify['Material']==mat]['Brand'].iloc[0])]['Material'].iloc[0]
+        except:
+            '''ignore for products that have changed id but are not in status 40 or 35'''
+            pass
     return dict_to_return        
 sales_data=sd.get_sales_data()
-anagrafica=an.create_anagrafica(2, file='AllData/anagrafica_AI.xlsx')
+anagrafica=an.create_anagrafica(3, file='AllData/anagrafica_AI.xlsx')
 sales_data=add_history_sales_different_sku(sales_data,anagrafica)
 market_data=md.get_market_data().drop(columns='Name Type',axis=1).fillna(0)
 market_data=market_data.drop(columns='Unnamed: 0')
@@ -36,7 +48,7 @@ not_integrated=iu.dataframe_differences(anagrafica,integration['Material'],'Mate
 not_integrated_40=not_integrated[not_integrated['ECC - Local Product Status']!='40']
 anagrafica_40=anagrafica[anagrafica['ECC - Local Product Status']=='40']
 
-market_data_by_molecule=market_data.drop(columns=['Manufacturer','Product','Pack']).set_index('Molecule')
+market_data_by_molecule=market_data.drop(columns=['Manufacturer','Product','Pack','Anatomical Therapeutic Class 4']).set_index('Molecule')
 market_data_by_molecule[market_data_by_molecule.columns]=market_data_by_molecule[market_data_by_molecule.columns].astype(float)
 
 market_data_by_molecule=market_data_by_molecule.groupby(market_data_by_molecule.index).sum()
@@ -45,9 +57,9 @@ integration_join_anagrafica=anagrafica.merge(integration,how='inner',on='Materia
 integration_join_anagrafica=integration_join_anagrafica[integration_join_anagrafica['ECC - Local Product Status']=='40']
 market_data_pb=md.get_probiotici_csv()
 integration_probiotici=pd.read_csv('AllData/crtSAPQlik.csv',sep=';')
-material='44083137'
+material='44082733'
 def plot_for_material_probiotico(material):
-    sales_data_filtered_pb=sales_data[sales_data['Material']==material]
+    sales_data_filtered_pb=sales_data[sales_data['Material'].astype(str)==str(material)]
     integration_filtered_pb=integration_probiotici[integration_probiotici['Material'].astype(str)==material]
     market_data_filtered_pb=market_data_pb[(market_data_pb['Company']=='SANDOZ-HEXAL') & (market_data_pb['Product']==integration_filtered_pb['QlikProduct'].iloc[0])]
     ts_sales_data_pb=td.tras_sales_data(sales_data_filtered_pb)
@@ -74,10 +86,10 @@ def get_dataframes_for_material(material):
     ts_market_data_by_molecule.index=pd.to_datetime(ts_market_data_by_molecule.index,format='%d/%m/%Y')
     return ts_market_data_by_molecule,ts_sales_data,ts_market_data
     
-
+market_data_b=market_data[market_data['Molecule']=='BUPRENORPHINE']
     
 def plot_material(material):
-    if(material in integration_probiotici['Material']):
+    if(int(material) in list(integration_probiotici['Material'])):
         plot_for_material_probiotico(material)
     else:
         plot_for_material(material)

@@ -24,6 +24,10 @@ def tras_market_data_manual(market_data):
 def tras_market_data(market_data):
     market_data['All Data']=market_data['Molecule']+','+market_data['Manufacturer']+','+market_data['Product']+','+market_data['Pack']
     market_data=market_data.drop(columns=['Molecule','Manufacturer','Product','Pack'])
+    try:
+        market_data=market_data.drop(columns=['Anatomical Therapeutic Class 4'])
+    except:
+        pass
     market_data=market_data.set_index("All Data").T
     market_data.index=pd.to_datetime(market_data.index,format='%d/%m/%Y')
     return market_data.sort_index()
