@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Wed Feb 13 14:26:53 2019
+
+@author: arlind
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Mon Jan 28 10:58:13 2019
 
 @author: arlind
@@ -14,6 +22,8 @@ from PyQt5.QtGui import QIcon
  
  
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import ai_analysis.data_loading.load_data_locally as ldl
 import ai_analysis.models.prophet_models as pm
  
@@ -28,7 +38,7 @@ class App(QMainWindow):
         self.initUI()
     
     def plot_diagram(self,item):       
-        self.allData.plot_material(item.text().split('-')[0].strip())
+        pm.model_material(item.text().split('-')[0].strip(),self.allData,show_components=True)    
     def initUI(self):
         self.setWindowTitle(self.title)
         list_w=QListWidget(self)

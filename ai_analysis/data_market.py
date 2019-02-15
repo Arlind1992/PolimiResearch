@@ -53,8 +53,6 @@ def add_latest_data(latest_data_path,old_data_path):
 def get_market_data():
     return create_market_data_from_csv(filepath='AllData/AllDataIMS.csv',separator=';').drop(columns='Unnamed: 0.1',axis=1)
 
-
-
 def get_probiotici(file='AllData/Probiotici.xlsx',sheet_name='Sheet1'):
     wb = load_workbook(filename = file)
     intrested_sheet=wb[sheet_name]
@@ -66,7 +64,27 @@ def get_probiotici(file='AllData/Probiotici.xlsx',sheet_name='Sheet1'):
 def get_probiotici_csv(file='AllData/Probiotici.csv'):
     market_data_probiotici=pd.read_csv(filepath_or_buffer=file,sep=';',decimal=',').drop(columns='MonthYear',axis=1)
     market_data_probiotici=market_data_probiotici[(market_data_probiotici['Company']!='Total') &(market_data_probiotici['Product']!='Total')&(market_data_probiotici['Brand']!='Total')]
-    return market_data_probiotici.replace('-',0)
+    col_names=list(market_data_probiotici)
+    pattern=re.compile('.*-[0-9]{4}')
+    for colname in col_names:
+        if pattern.match(colname):
+            market_data_probiotici[colname]=market_data_probiotici[colname].apply(lambda x: float(str(x).replace('.','').replace(',','.'))*1000 if x!='-' else 0).astype(int)
+    return market_data_probiotici
+def remove_dupplicates(market_data):
+    columns_list=market_data.columns.values.tolist()
+    columns_list.remove('Molecule')
+    return market_data.groupby(columns_list,as_index=False).agg(lambda x: ','.join(x))
+
+def get_market_competitor_data_by_material(material,market_data,integration,market_data_perimeter):
+    integration_filtered=integration[integration['Material'].astype(str)==str(material)]
+    market_data_perimeter_filtered=market_data_perimeter[market_data_perimeter['Key']==(integration_filtered['Product'].iloc[0]+' '+integration_filtered['Pack'].iloc[0])]
+    if str(market_data_perimeter_filtered['Special Market'].iloc[0])!='nan':
+       perimeter_to_join_by=market_data_perimeter[market_data_perimeter['Special Market']==market_data_perimeter_filtered['Special Market'].iloc[0]]
+    else:
+       perimeter_to_join_by=market_data_perimeter[market_data_perimeter['Mkt Molecola']==market_data_perimeter_filtered['Mkt Molecola'].iloc[0]] 
+    perimeter_to_join_by_only_key=perimeter_to_join_by['Key'].to_frame()
+    market_data['Key']=market_data['Product']+' '+market_data['Pack']
+    return market_data.merge(perimeter_to_join_by_only_key,on='Key')    
 
 '''
 filepath='Market Data/All old data'+'/'+onlyfiles[1]

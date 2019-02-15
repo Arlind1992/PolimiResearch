@@ -28,6 +28,11 @@ def tras_market_data(market_data):
         market_data=market_data.drop(columns=['Anatomical Therapeutic Class 4'])
     except:
         pass
+    '''column added when calculating market perimeter but that needs to be removed here, dataframe not duplicated for performance reasons'''
+    try:
+        market_data=market_data.drop(columns=['Key'])
+    except:
+        pass
     market_data=market_data.set_index("All Data").T
     market_data.index=pd.to_datetime(market_data.index,format='%d/%m/%Y')
     return market_data.sort_index()
