@@ -51,7 +51,12 @@ def add_latest_data(latest_data_path,old_data_path):
     return toreturn    
 
 def get_market_data():
-    return create_market_data_from_csv(filepath='AllData/AllDataIMS.csv',separator=';').drop(columns='Unnamed: 0.1',axis=1)
+    to_return=create_market_data_from_csv(filepath='AllData/AllDataIMS.csv',separator=';')
+    try:
+        to_return=to_return.drop(columns='Unnamed: 0.1',axis=1)
+    except:
+        pass
+    return to_return
 
 def get_probiotici(file='AllData/Probiotici.xlsx',sheet_name='Sheet1'):
     wb = load_workbook(filename = file)
@@ -81,7 +86,7 @@ def get_market_competitor_data_by_material(material,market_data,integration,mark
     if str(market_data_perimeter_filtered['Special Market'].iloc[0])!='nan':
        perimeter_to_join_by=market_data_perimeter[market_data_perimeter['Special Market']==market_data_perimeter_filtered['Special Market'].iloc[0]]
     else:
-       perimeter_to_join_by=market_data_perimeter[market_data_perimeter['Mkt Molecola']==market_data_perimeter_filtered['Mkt Molecola'].iloc[0]] 
+       perimeter_to_join_by=market_data_perimeter[(market_data_perimeter['Mkt Molecola']==market_data_perimeter_filtered['Mkt Molecola'].iloc[0])&(market_data_perimeter['Special Market'].isnull())] 
     perimeter_to_join_by_only_key=perimeter_to_join_by['Key'].to_frame()
     market_data['Key']=market_data['Product']+' '+market_data['Pack']
     return market_data.merge(perimeter_to_join_by_only_key,on='Key')    

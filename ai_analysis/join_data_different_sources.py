@@ -7,8 +7,8 @@ Created on Tue Jan 22 12:31:53 2019
 """
 import pandas as pd
 import ai_analysis.transform_data as td
-import ai_analysis.data_market as dm
-
+import ai_analysis.market.data_market as dm
+from statsmodels.tsa.seasonal import seasonal_decompose
 class AllData:
     '''
     integration_join_anagrafica=anagrafica.merge(integration,how='inner',on='Material')
@@ -51,8 +51,13 @@ class AllData:
     def plot_for_material(self,material):
         ts_market_data_by_molecule,ts_sales_data,ts_market_data,stock_changes=self.get_dataframes_for_material(material)
         '''stock_changes.plot(title='Stock changes')'''
-        ts_market_data_by_molecule.plot(title='Whole market')
+        ts_market_data_by_molecule.plot()
+       
+        '''seasonal_decompose(ts_market_data_by_molecule,model='additive').plot()'''
         ts_sales_data.join(ts_market_data).plot(title='Sales-Market')
+        '''seasonal_decompose(ts_market_data,model='additive').plot()
+        seasonal_decompose(ts_sales_data,model='additive').plot()'''
+        
     '''
     returns three different dataframes in correspondence with the material code received as input
     the dataframes are in the following order wholemarket, internalsales, externalsales
