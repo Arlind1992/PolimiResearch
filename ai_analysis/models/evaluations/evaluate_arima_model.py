@@ -55,11 +55,39 @@ def get_arima_hyper_parameters():
     pqd=list(itertools.product(p_values,d_values,q_values))
     return pqd,seasonal_pdq
 
-def calculate_weights(internal_sales,external_sales,market,material):
-    weight=numpy.arange(0,1,0.01)
+def calculate_weights(allData,material,number_of_splits=5):
+    market_data_by_competitor,sales_data,market_data,stock,market_percentage=allData.get_dataframes_for_material(material)
+    arima_order,seasonal_order=get_best_param_from_results(material)
+    weight=numpy.arange(0,1,0.05)
     possible_weights=[(x,y,z) for x in weight for y in weight for z in weight if x+y+z==1]
     best_weights=(0,0,0)
     best_score=float('inf')
+    market_data=market_data[-len(sales_data)+1:]
+    market_data=market_data[market_data.columns.values[0]]
+    market_data_by_competitor=market_data_by_competitor[-len(sales_data)+1:]
+    sales_data=sales_data[sales_data.columns.values[0]]
+    mean_percentage=market_percentage[-6:].mean()
+    for pw in possible_weights:
+        error=0
+        for train_index, test_index in tss(n_splits=number_of_splits).split(sales_data):
+            train_set_internal,test_set_internal=sales_data[train_index],sales_data[test_index]
+            train_set_external=market_data[train_index[train_index[:-1]]]
+            train_set_competitor=market_data_by_competitor[train_index[train_index[:-1]]]
+            model_internal = SARIMAX(train_set_internal, order=arima_order,seasonal_order=seasonal_order,enforce_stationarity=False,enforce_invertibility=False)
+            model_fit_internal = model_internal.fit(disp=0)
+            model_external = SARIMAX(train_set_external, order=arima_order,seasonal_order=seasonal_order,enforce_stationarity=False,enforce_invertibility=False)
+            model_fit_external = model_external.fit(disp=0)
+            model_market = SARIMAX(train_set_competitor, order=arima_order,seasonal_order=seasonal_order,enforce_stationarity=False,enforce_invertibility=False)
+            model_fit_market = model_market.fit(disp=0)
+            yhat_internal = model_fit_internal.forecast(steps=len(test_index))
+            yhat_external = model_fit_external.forecast(steps=(len(test_index)+1))[1:]
+            yhat_market = model_fit_market.forecast(steps=(len(test_index)+1))[1:]
+            # calculate out of sample error
+            error = mean_squared_error(test_set_internal, pw[0]*yhat_internal+pw[1]*yhat_external+pw[2]*yhat_market*mean_percentage )+error
+        if error<best_score:
+            best_score=error
+            best_weights=pw
+    return best_weights
     
     
 
@@ -70,7 +98,7 @@ def get_best_param_from_results(material):
         eval_results=ldl.load_evaluation_results()
         s_params_SARIMA=eval_results[(eval_results['Material'].astype(str)==str(material))&(eval_results['Algorithm']=='SARIMA')]['Best Param'].iloc[0]
         eval_results=make_tuple(s_params_SARIMA) 
-        if arima_order:    
+        if eval_results:    
             arima_order=eval_results[0]
             seasonal_order=eval_results[1]
     except:

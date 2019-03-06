@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 def model_material(material,allData,arima_order=(2, 1, 2),seasonal_order=(0,0,0,12),show_components=False):
-    market_data_by_competitor,sales_data,market_data,stock=allData.get_dataframes_for_material(material)
+    market_data_by_competitor,sales_data,market_data,stock,market_percentage=allData.get_dataframes_for_material(material)
     int_sales_forecast,conf_interval_int_sales=model_df(sales_data,show_components,arima_order=arima_order,seasonal_order=seasonal_order,title='Sales SAP')  
     ext_sales_forecast,conf_interval_ext_sales=model_df(market_data,show_components,title='Sales IMS')
     competitor_sales_forecast,conf_interval_competitor=model_df(market_data_by_competitor.to_frame(),show_components,title='Sales Whole Market')

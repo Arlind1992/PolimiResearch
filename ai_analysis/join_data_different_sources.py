@@ -71,7 +71,8 @@ class AllData:
         ts_market_data_by_molecule=self.get_market_for_material(material)
         ts_market_data_by_molecule.index=pd.to_datetime(ts_market_data_by_molecule.index,format='%d/%m/%Y')
         stock_changes=ts_sales_data[ts_sales_data.columns[0]].subtract(ts_market_data[ts_market_data.columns[0]]).dropna()
-        return self.remove_initial_zeros(ts_market_data_by_molecule.sort_index()),self.remove_initial_zeros(ts_sales_data),self.remove_initial_zeros(ts_market_data),stock_changes    
+        market_percentage=ts_market_data[ts_market_data.columns.values[0]]/ts_market_data_by_molecule        
+        return self.remove_initial_zeros(ts_market_data_by_molecule.sort_index()),self.remove_initial_zeros(ts_sales_data),self.remove_initial_zeros(ts_market_data),stock_changes,self.remove_initial_zeros(market_percentage)    
     
     def get_market_for_material(self,material):
         market_data_competitor=dm.get_market_competitor_data_by_material(material,self.market_data,self.integration,self.market_perimeter)
