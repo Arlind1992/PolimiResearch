@@ -9,7 +9,8 @@ import ai_analysis.sales_data as sd
 import ai_analysis.anagrafica as an
 import ai_analysis.market.data_market as md
 import pandas as pd
-
+import ai_analysis.manual_integration.create_data as cd
+from openpyxl import load_workbook
 def load_data():
     sales_data=sd.get_sales_data()
     anagrafica=an.create_anagrafica(3, file='AllData/anagrafica_AI.xlsx')
@@ -39,5 +40,21 @@ def load_market_data():
 def load_evaluation_results():
     return pd.read_csv('Results',sep=';')
 
+
+def load_weight_results():
+    return pd.read_csv('ResultsWeights',sep=';')
+
+def load_anagrafica():
+    return an.create_anagrafica(3, file='AllData/anagrafica_AI.xlsx')
+
 def load_sales_data():
     return  sd.get_sales_data()
+
+def load_price_and_discounts():
+    work_book=load_workbook('Finance/finance_data.xlsx')
+    sheet_ph=work_book['Other']
+    sheet_wh=work_book['WHS']
+    sheet_other=work_book['PHS']
+    return pd.read_excel('Finance/finance_data.xlsb')
+
+

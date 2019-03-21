@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Tue Mar 19 16:19:37 2019
+
+@author: arlind
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Feb 21 12:32:08 2019
 script to launch the grid search for all the Algorithms and for all SKU gives as output a csv file containing best parameters for each 
 series 
@@ -35,27 +43,25 @@ results=[]
 pdq,seasonal_order=evam.get_arima_hyper_parameters()
 changepoint_prior_scale_list,seasonality_prior_scale_list,fourier_order_list=evpm.get_hyper_parameter_values() 
 timestamp=str(datetime.datetime.now())   
-subset_sku=['44070378']
-'''list(integration_data['Material'])'''
+subset_sku=list(integration_data['Material'])
 test_window=3
 training_percentage=0.7
-last_year=True
-def calculate_arima(material):
+def calculate_prophet(material):
     results_to_return=[]
     ts_market_data_by_molecule,ts_sales_data,ts_market_data,stock,market_percentage=allData.get_dataframes_for_material(str(material))
-    mse_competitor=evam.evaluate_arima_models(ts_market_data_by_molecule,pdq,seasonal_order,test_window=test_window,training_percentage=training_percentage,last_year=last_year)
-    results_to_return.append(add_results(material,const.sarima,const.market_comp_sales_IMS,len(ts_market_data_by_molecule),const.mean_squared,mse_competitor,timestamp))
-    mse_competitor=evam.evaluate_arima_models(ts_sales_data.iloc[:,0],pdq,seasonal_order,test_window=test_window,training_percentage=training_percentage,last_year=last_year)
-    results_to_return.append(add_results(material,const.sarima,const.internal_sales_SAP,len(ts_sales_data),const.mean_squared,mse_competitor,timestamp))
-    mse_competitor=evam.evaluate_arima_models(ts_market_data[ts_market_data.columns[0]],pdq,seasonal_order,test_window=test_window,training_percentage=training_percentage,last_year=last_year)
-    results_to_return.append(add_results(material,const.sarima,const.external_sales_IMS,len(ts_market_data),const.mean_squared,mse_competitor,timestamp))   
+    mse_competitor=evpm.evaluate_prophet_models(ts_market_data_by_molecule,changepoint_prior_scale_list,seasonality_prior_scale_list,fourier_order_list,test_window=test_window,training_percentage=training_percentage)
+    results_to_return.append(add_results(material,const.prophet,const.market_comp_sales_IMS,len(ts_market_data_by_molecule),const.mean_squared,mse_competitor,timestamp))
+    mse_competitor=evpm.evaluate_prophet_models(ts_sales_data.iloc[:,0],changepoint_prior_scale_list,seasonality_prior_scale_list,fourier_order_list,test_window=test_window,training_percentage=training_percentage)
+    results_to_return.append(add_results(material,const.prophet,const.internal_sales_SAP,len(ts_sales_data),const.mean_squared,mse_competitor,timestamp))
+    mse_competitor=evpm.evaluate_prophet_models(ts_market_data[ts_market_data.columns[0]],changepoint_prior_scale_list,seasonality_prior_scale_list,fourier_order_list,test_window=test_window,training_percentage=training_percentage)
+    results_to_return.append(add_results(material,const.prophet,const.external_sales_IMS,len(ts_market_data),const.mean_squared,mse_competitor,timestamp))
     return results_to_return
 
-pool = multiprocessing.Pool(8)
-results_pool=zip(*pool.map(calculate_arima, subset_sku))
+pool = multiprocessing.Pool(30)
+results_pool=zip(*pool.map(calculate_prophet, subset_sku))
 for rp in results_pool:
     results.extend(rp)
-    
+
 timestamp=str(datetime.datetime.now())     
 df_results=pd.DataFrame(results)
-df_results.to_csv('HyperparamResultsSARIMA_'+timestamp,sep=';',mode='a')
+df_results.to_csv('HyperparamResultsProphet_'+timestamp,sep=';',mode='a')

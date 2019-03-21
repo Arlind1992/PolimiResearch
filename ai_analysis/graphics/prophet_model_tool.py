@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 13 14:26:53 2019
-
-@author: arlind
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
 Created on Mon Jan 28 10:58:13 2019
 
 @author: arlind

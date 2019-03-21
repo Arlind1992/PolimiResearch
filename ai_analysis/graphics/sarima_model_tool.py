@@ -29,8 +29,7 @@ class App(QMainWindow):
         self.initUI()
     
     def plot_diagram(self,item):      
-        arima_order,seasonal_order=eam.get_best_param_from_results(item.text().split('-')[0].strip())
-        am.model_material(item.text().split('-')[0].strip(),self.allData,show_components=True,arima_order=arima_order,seasonal_order=seasonal_order) 
+        am.model_material(item.text().split('-')[0].strip(),self.allData,show_components=True) 
     def initUI(self):
         self.setWindowTitle(self.title)
         list_w=QListWidget(self)

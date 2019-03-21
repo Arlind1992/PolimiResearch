@@ -49,7 +49,7 @@ class AllData:
             return i    
         return series_tofilter.iloc[get_first_non_zero_value(series_tofilter):]
     def plot_for_material(self,material):
-        ts_market_data_by_molecule,ts_sales_data,ts_market_data,stock_changes=self.get_dataframes_for_material(material)
+        ts_market_data_by_molecule,ts_sales_data,ts_market_data,stock_changes,market_percentage=self.get_dataframes_for_material(material)
         '''stock_changes.plot(title='Stock changes')'''
         ts_market_data_by_molecule.plot()
        

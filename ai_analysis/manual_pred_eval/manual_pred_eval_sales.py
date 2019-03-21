@@ -11,9 +11,11 @@ import pandas as pd
 import ai_analysis.manual_integration.create_data as cd
 import numpy as np
 import datetime
+import ai_analysis.data_loading.load_data_locally as ldl
 wb=load_workbook(filename='Sales/ManualForecast.xlsx')
 sheet=wb['Copied']
 
+anagrafica=ldl.load_anagrafica()
 man_forecast=cd.create_sales_data(sheet,5,sheet.max_row)
 material_prod=man_forecast[['material','Product']].drop_duplicates()
 man_forecast_fil=man_forecast[['Product','material','CAUSALE','jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']]
@@ -52,11 +54,31 @@ material_aut=man_forecast_only_predicted.index.tolist()
 material_man=aut_eval_actual.index.tolist()
 main_list = np.setdiff1d(material_man,material_aut)
 
+
 comp_eval_diffences=(man_forecast_only_predicted-aut_eval_actual).abs() - (aut_eval_forecast-aut_eval_actual).abs()
 comp_eval_percentage=((man_forecast_only_predicted-aut_eval_actual).abs() - (aut_eval_forecast-aut_eval_actual).abs())/aut_eval_actual
+diff_actual_aut_forecast=aut_eval_forecast-aut_eval_actual
+diff_actual_man_forecast=man_forecast_only_predicted-aut_eval_actual
 
-comp_eval_diffences.to_csv('ForecastResults/ComparisonDiff2018.csv',sep=';')
+for i in range(0,4):
+    comp_eval_diffences['Quarter '+str(i+1)]=comp_eval_diffences[comp_eval_diffences.columns[3*i]]+comp_eval_diffences[comp_eval_diffences.columns[3*i+1]]+comp_eval_diffences[comp_eval_diffences.columns[3*i+2]]
+    comp_eval_percentage['Quarter '+str(i+1)]=comp_eval_percentage[comp_eval_percentage.columns[3*i]]+comp_eval_percentage[comp_eval_percentage.columns[3*i+1]]+comp_eval_percentage[comp_eval_percentage.columns[3*i+2]]
+    diff_actual_aut_forecast['Quarter '+str(i+1)]=diff_actual_aut_forecast[diff_actual_aut_forecast.columns[3*i]]+diff_actual_aut_forecast[diff_actual_aut_forecast.columns[3*i+1]]+diff_actual_aut_forecast[diff_actual_aut_forecast.columns[3*i+2]]
+    diff_actual_man_forecast['Quarter '+str(i+1)]=diff_actual_man_forecast[diff_actual_man_forecast.columns[3*i]]+diff_actual_man_forecast[diff_actual_man_forecast.columns[3*i+1]]+diff_actual_man_forecast[diff_actual_man_forecast.columns[3*i+2]]
 
-comp_eval_percentage.to_csv('ForecastResults/ComparisonPerc2018.csv',sep=';')
+to_save=comp_eval_diffences.join(comp_eval_percentage,lsuffix='_Man VS Aut units',rsuffix='_Man VS Aut %').join(diff_actual_aut_forecast,rsuffix='_Aut-Actual').join(diff_actual_man_forecast,rsuffix='_Man-Actual').join(aut_eval_actual,rsuffix='_Actual')
+
+anagrafica=anagrafica[['Material','Descrizione']]
+anagrafica.index=anagrafica['Material']
+anagrafica=anagrafica.drop(columns=['Material'])
+
+to_save=to_save.join(anagrafica)
+to_save.index=to_save.index+' '+to_save['Descrizione']
+to_save=to_save.drop(columns=['Descrizione'])
+to_save.to_csv('ForecastResults/Results2018.csv',sep=';',decimal=',',float_format='%.2f')
+
+comp_eval_diffences.to_csv('ForecastResults/ComparisonDiff2018.csv',sep=';',decimal=',',float_format='%.2f')
+
+comp_eval_percentage.to_csv('ForecastResults/ComparisonPerc2018.csv',sep=';',decimal=',',float_format='%.2f')
 
 
